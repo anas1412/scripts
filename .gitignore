@@ -1,0 +1,49 @@
+# Gitignore for Mari's CLI Toolkit
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python/
+env/
+venv/
+*.env
+.venv/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+temp/
+tmp/
+
+# OS generated files
+.DS_Store
+.Trashes
+Thumbs.db
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Distribution and packaging
+dist/
+build/
+*.egg-info/
+
+# API Keys and sensitive information (though handled by env vars, good to be safe)
+.env
+.flaskenv
+
+# Installer specific
+install.log
+
+# Shell history (if any temporary history files are created)
+.bash_history_temp
+.zsh_history_temp
+
+# Miscellaneous
+shell_config.sh
