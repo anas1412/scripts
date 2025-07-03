@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anas's CLI Toolkit Wiki</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background-color: #f8f8f8;
+        }
+        header {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        nav {
+            background-color: #34495e;
+            padding: 10px 0;
+            text-align: center;
+            border-radius: 0 0 8px 8px;
+            margin-bottom: 20px;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        nav ul li {
+            display: inline-block;
+            margin: 0 15px;
+        }
+        nav ul li a {
+            color: #ecf0f1;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+        nav ul li a:hover {
+            color: #1abc9c;
+        }
+        main {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #34495e;
+            margin-top: 20px;
+        }
+        code {
+            background-color: #e0e0e0;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #272c34;
+            color: #f1f1f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+            border-radius: 0;
+        }
+        .note {
+            background-color: #ecf0f1;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #777;
+            font-size: 0.9em;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Anas's CLI Toolkit Wiki</h1>
+        <p>Hmph. All the information you could possibly need, laid out for your convenience. Don't expect me to hold your hand, though.</p>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#introduction">Introduction</a></li>
+            <li><a href="#installation">Installation</a></li>
+            <li><a href="#ai">AI Command</a></li>
+            <li><a href="#fix">Fix Command</a></li>
+            <li><a href="#blocker">Blocker Script</a></li>
+            <li><a href="#install-script">Install Script</a></li>
+            <li><a href="#shell-config">Shell Config</a></li>
+            <li><a href="https://github.com/anas1412/scripts/" target="_blank">GitHub Repo</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="introduction">
+            <h2>Introduction</h2>
+            <p>This is a collection of command-line utilities designed to make your daily Linux workflow a bit less... tedious. It's not like I built these because I enjoy helping, but someone had to do it. You'll find tools for quick AI assistance, automatic command fixing, and even a way to block those pesky distracting websites.</p>
+        </section>
+
+        <section id="installation">
+            <h2>Installation</h2>
+            <p>Getting these tools set up is quite simple. Just follow these steps. Don't mess it up.</p>
+            <ol>
+                <li><strong>Clone the Repository:</strong>
+<pre><code>git clone https://github.com/anas1412/scripts.git
+cd scripts</code></pre>
+                </li>
+                <li><strong>Run the Installer:</strong>
+                    <p>The installer handles dependencies, copies scripts to <code>~/scripts/</code>, and configures your shell.</p>
+<pre><code>chmod +x install
+./install</code></pre>
+                    <p class="note">
+                        <strong>Note:</strong> The script will prompt you for your Google Gemini API key. Ensure you have Python3 and pip3 installed; the installer will attempt to install the necessary Python library (`google-generativeai`) for your user.
+                    </p>
+                </li>
+                <li><strong>Activate Changes:</strong>
+                    <p>After installation, refresh your shell to load the new commands and configurations.</p>
+<pre><code>source ~/.zshrc # If you use Zsh
+# OR
+source ~/.bashrc # If you use Bash
+# OR simply close and reopen your terminal window.</code></pre>
+                </li>
+            </ol>
+        </section>
+
+        <section id="ai">
+            <h2><code class="command-name">ai</code> Command</h2>
+            <h3>Purpose</h3>
+            <p>The <code>ai</code> command allows you to quickly query an AI assistant for Linux-related questions. It provides a brief explanation and the most relevant command.</p>
+            <h3>Usage</h3>
+            <p>Simply type <code>ai</code> followed by your question in quotes.</p>
+<pre><code>ai "how do I recursively copy files and keep their permissions"
+# Expected output example:
+# To recursively copy files and preserve permissions, use 'cp -a'.
+# cp -a source_directory/ destination_directory/</code></pre>
+            <h3>Details</h3>
+            <ul>
+                <li>This command is an alias that calls the <code>gemini_ai_helper.py</code> script located in <code>~/scripts/</code>.</li>
+                <li>It relies on your <code>GEMINI_API_KEY</code> being set in your environment.</li>
+                <li>The AI attempts to provide a concise, one-to-two-sentence explanation followed immediately by the raw command without markdown formatting.</li>
+            </ul>
+        </section>
+
+        <section id="fix">
+            <h2><code class="command-name">fix</code> Command</h2>
+            <h3>Purpose</h3>
+            <p>Did your last command fail? Instead of re-typing, just use <code>fix</code>. This command analyzes the error output of your previous command and uses AI to suggest a corrected version, giving you an option to execute it immediately.</p>
+            <h3>Usage</h3>
+            <p>Run a command that you expect to fail (or one that just did), then type <code>fix</code>.</p>
+<pre><code># Example: A typo in a common command
+sudo apt updatee
+# Output from apt:
+# E: Invalid operation updatee
+# E: Failed to fetch some archives, maybe run apt-get update or try with --fix-missing?
+
+# Now, type 'fix':
+fix
+# Expected interaction:
+# Attempting to re-run: sudo apt updatee
+# The previous command failed (exit code 100).
+# Sending details to AI for a suggested fix...
+#
+# AI suggests:
+# sudo apt update
+# Execute suggested command? (y/N): y
+# # If you type 'y', 'sudo apt update' will then be executed.</code></pre>
+            <h3>Details</h3>
+            <ul>
+                <li>The <code>fix</code> command is a shell function (not a simple alias) that captures the exact previous command and its full standard output/error.</li>
+                <li>It passes this information to the <code>gemini_try_helper.py</code> script.</li>
+                <li>The AI is instructed to return *only* the raw, corrected command.</li>
+                <li>It will not attempt to fix itself or empty commands.</li>
+            </ul>
+        </section>
+
+        <section id="blocker">
+            <h2><code class="command-name">blocker</code> Script</h2>
+            <h3>Purpose</h3>
+            <p>The <code>blocker</code> script helps you easily manage entries in your <code>/etc/hosts</code> file to block specific websites. Useful for focus, or just... being picky about what you access.</p>
+            <h3>Usage</h3>
+            <p>The script uses actions (<code>add</code>, <code>remove</code>, <code>edit</code>, <code>list</code>) followed by domain names.</p>
+            <h4>Add Domains</h4>
+<pre><code>blocker add facebook.com twitter.com
+# Adds 127.0.0.1 entries for facebook.com, www.facebook.com, twitter.com, www.twitter.com</code></pre>
+            <h4>List Blocked Domains</h4>
+<pre><code>blocker list
+# Displays the domains currently managed by the blocker script in /etc/hosts</code></pre>
+            <h4>Remove Domains</h4>
+<pre><code>blocker remove facebook.com</code></pre>
+            <h4>Edit a Domain</h4>
+<pre><code>blocker edit oldsite.com newsite.com
+# Replaces oldsite.com (and its www. version) with newsite.com (and its www. version)</code></pre>
+            <h4>Get Help</h4>
+<pre><code>blocker help
+# Displays usage instructions</code></pre>
+            <h3>Details</h3>
+            <ul>
+                <li>The script modifies <code>/etc/hosts</code>, which requires root privileges. It handles the <code>sudo</code> calls internally, so you don't need to prefix <code>blocker</code> with <code>sudo</code> yourself.</li>
+                <li>It adds a special marker (<code># --blocker-managed--</code>) to lines it manages, preventing it from interfering with other entries in your hosts file.</li>
+                <li>When adding or removing a domain, it automatically includes the <code>www.</code> subdomain version for comprehensive blocking.</li>
+            </ul>
+        </section>
+
+        <section id="install-script">
+            <h2><code class="command-name">install</code> Script</h2>
+            <h3>Purpose</h3>
+            <p>This script orchestrates the entire setup of Mari's CLI Toolkit. It's the first thing you run to get everything working.</p>
+            <h3>Usage</h3>
+            <p>Run from the root of the cloned repository:</p>
+<pre><code>chmod +x install
+./install</code></pre>
+            <h3>Details</h3>
+            <ul>
+                <li>Checks for <code>pip3</code> and installs the <code>google-generativeai</code> Python package to your user's site-packages.</li>
+                <li>Creates the <code>~/scripts/</code> directory if it doesn't exist.</li>
+                <li>Copies <code>gemini_ai_helper.py</code>, <code>gemini_try_helper.py</code>, and <code>blocker</code> from the cloned repository into <code>~/scripts/</code>.</li>
+                <li>**Generates and populates** <code>~/scripts/shell_config.sh</code> with the definitions for the <code>ai</code> alias and <code>fix</code> function. This file is *not* part of the GitHub repository itself.</li>
+                <li>Makes all necessary scripts executable.</li>
+                <li>Adds/updates specific blocks in your <code>~/.bashrc</code> and <code>~/.zshrc</code> to:
+                    <ul>
+                        <li>Export your <code>GEMINI_API_KEY</code>.</li>
+                        <li>Add <code>~/scripts/</code> to your <code>PATH</code>.</li>
+                        <li>Source the newly created <code>~/scripts/shell_config.sh</code>.</li>
+                    </ul>
+                </li>
+                <li>Uses unique markers (e.g., <code># --- START ... ---</code>, <code># --- END ... ---</code>) to manage its configuration blocks, allowing safe re-runs without clashing with your existing shell configuration.</li>
+            </ul>
+        </section>
+
+        <section id="shell-config">
+            <h2><code class="command-name">shell_config.sh</code></h2>
+            <h3>Purpose</h3>
+            <p>This file acts as a centralized location for the custom shell aliases and functions provided by this toolkit (specifically <code>ai</code> and <code>fix</code>). It keeps your main <code>.bashrc</code> or <code>.zshrc</code> files cleaner.</p>
+            <h3>Usage</h3>
+            <p>This file is not meant to be run directly by the user. It is automatically:</p>
+            <ol>
+                <li><strong>Created and populated</strong> by the <code>install</code> script during setup.</li>
+                <li><strong>Sourced</strong> (loaded) by your <code>.bashrc</code> or <code>.zshrc</code> every time you open a new terminal session. This makes the <code>ai</code> alias and <code>fix</code> function available.</li>
+            </ol>
+            <h3>Details</h3>
+            <ul>
+                <li>It defines the <code>ai</code> alias, pointing to <code>gemini_ai_helper.py</code>.</li>
+                <li>It defines the <code>fix</code> shell function, which orchestrates the logic for fixing failed commands using <code>gemini_try_helper.py</code>.</li>
+                <li>Its primary role is to modularize your shell configuration.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>This toolkit is brought to you by anas1412. It's not like I enjoy making things easy for you, but someone has to ensure you're not completely lost. Hmph.</p>
+        <p>Repository: <a href="https://github.com/anas1412/scripts/" target="_blank">anas1412/scripts</a></p>
+    </footer>
+</body>
+</html>

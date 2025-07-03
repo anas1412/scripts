@@ -3,9 +3,24 @@
 # --- Configuration ---
 SCRIPTS_SOURCE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SCRIPTS_TARGET_DIR="$HOME/scripts"
-REQUIRED_PYTHON_PACKAGE="google-genai"
+REQUIRED_PYTHON_PACKAGE="google-genai" # Corrected package name
 SHELL_CONFIG_FILE="$SCRIPTS_TARGET_DIR/shell_config.sh"
 # --- End Configuration ---
+
+# Spinner function for visual feedback during long operations
+spinner() {
+    local pid=$1
+    local delay=0.1
+    local spin=( '-' '\\' '|' '/' )
+    local i=0
+    tput civis # Hide cursor
+    while kill -0 $pid 2>/dev/null; do # Check if process is still running
+        printf "\r%s %s" "Working..." "${spin[i++ % ${#spin[@]}]}"
+        sleep $delay
+    done
+    tput cnorm # Restore cursor
+    printf "\r%s\n" " " # Clear the line after spinner
+}
 
 # Function to add or update a block of configuration in a shell file.
 # It expects markers to be on their own lines.
@@ -17,7 +32,7 @@ add_or_update_config() {
     local end_marker="${5:-$start_marker}" # If end_marker not provided, use start_marker
 
     if [ ! -f "$file" ]; then
-        echo "Warning: Shell config file '$file' not found. Skipping '$config_name' setup for this shell."
+        echo "Warning: Shell config file '$file' not found. Skipping '$config_name' setup for this shell." >&2
         return 1
     fi
 
@@ -25,6 +40,10 @@ add_or_update_config() {
 
     # Create a temporary file for sed operations
     local temp_file=$(mktemp)
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to create temporary file for '$file'. Check permissions or disk space." >&2
+        return 1
+    fi
 
     if grep -qF "$start_marker" "$file" && grep -qF "$end_marker" "$file"; then
         # Block exists, replace content between markers (including markers)
@@ -40,7 +59,7 @@ $end_marker" "$file" > "$temp_file"
     fi
 
     # Move the temporary file back to the original file
-    mv "$temp_file" "$file"
+    mv "$temp_file" "$file" || { echo "Error: Failed to update '$file' for '$config_name'. Check permissions or disk space." >&2; rm -f "$temp_file"; return 1; }
     echo "Successfully updated '$config_name' in '$file'."
 }
 
@@ -51,29 +70,75 @@ echo "and configure helpful aliases/functions for your shell, in a cleaner way."
 # 1. Check for pip3 and install Python dependencies
 echo "Checking for pip3..."
 if command -v pip3 &> /dev/null; then
-    echo "pip3 found. Installing Python dependencies ($REQUIRED_PYTHON_PACKAGE) for your user..."
-    pip3 install --user "$REQUIRED_PYTHON_PACKAGE" || {
-        echo "Error: Failed to install Python package. Make sure you have Python3 and pip3 installed." >&2
-        echo "If the error persists, you might need to run 'pip3 install --user $REQUIRED_PYTHON_PACKAGE' manually." >&2
+    echo -n "Installing Python dependencies ($REQUIRED_PYTHON_PACKAGE) for your user... "
+
+    # Run pip in a subshell and use a spinner for user feedback
+    # Redirect stderr to a temporary file to capture errors if pip fails
+    PIP_ERROR_OUTPUT=$(mktemp)
+    ( pip3 install --user --quiet "$REQUIRED_PYTHON_PACKAGE" >/dev/null 2>"$PIP_ERROR_OUTPUT" ) &
+    PIP_PID=$!
+    spinner $PIP_PID # Start the spinner animation
+
+    wait $PIP_PID
+    PIP_STATUS=$?
+    FULL_PIP_ERROR_CONTENT=$(cat "$PIP_ERROR_OUTPUT")
+    rm -f "$PIP_ERROR_OUTPUT"
+
+    if [ $PIP_STATUS -eq 0 ]; then
+        echo "Done. Python dependencies installed or already satisfied."
+    else
+        echo "Failed." >&2
+        echo "Error: Failed to install Python package '$REQUIRED_PYTHON_PACKAGE'." >&2
+        if [ -n "$FULL_PIP_ERROR_CONTENT" ]; then
+            echo "Full pip output:" >&2
+            echo "$FULL_PIP_ERROR_CONTENT" >&2
+        fi
+        echo "Please ensure Python3 and pip3 are correctly installed and try running:" >&2
+        echo "  pip3 install --user $REQUIRED_PYTHON_PACKAGE" >&2
         exit 1
-    }
+    fi
 else
     echo "Warning: pip3 not found. Cannot install Python dependencies automatically." >&2
     echo "Please install Python3 and pip3, then run 'pip3 install --user $REQUIRED_PYTHON_PACKAGE' manually." >&2
 fi
 
-# 2. Prepare script directory and copy files
+# 2. Prepare script directory and ensure files are present and executable
 echo "Ensuring script directory exists: $SCRIPTS_TARGET_DIR"
-mkdir -p "$SCRIPTS_TARGET_DIR" || { echo "Error: Could not create $SCRIPTS_TARGET_DIR. Check permissions." >&2; exit 1; }
+mkdir -p "$SCRIPTS_TARGET_DIR" || { echo "Error: Could not create '$SCRIPTS_TARGET_DIR'. Check folder permissions or disk space." >&2; exit 1; }
 
-echo "Copying scripts to $SCRIPTS_TARGET_DIR..."
-cp "$SCRIPTS_SOURCE_DIR"/gemini_ai_helper.py "$SCRIPTS_TARGET_DIR"/ || { echo "Error copying gemini_ai_helper.py" >&2; exit 1; }
-cp "$SCRIPTS_SOURCE_DIR"/gemini_try_helper.py "$SCRIPTS_TARGET_DIR"/ || { echo "Error copying gemini_try_helper.py" >&2; exit 1; }
-cp "$SCRIPTS_SOURCE_DIR"/blocker "$SCRIPTS_TARGET_DIR"/ || { echo "Error copying blocker" >&2; exit 1; }
+declare -a scripts_to_manage=(
+    "gemini_ai_helper.py"
+    "gemini_try_helper.py"
+    "blocker"
+)
+
+echo "Ensuring all necessary scripts are in '$SCRIPTS_TARGET_DIR' and are executable..."
+
+for script_name in "${scripts_to_manage[@]}"; do
+    source_path="$SCRIPTS_SOURCE_DIR/$script_name" # NO 'local' HERE
+    target_path="$SCRIPTS_TARGET_DIR/$script_name" # NO 'local' HERE
+
+    if [ ! -f "$source_path" ]; then
+        echo "Error: Source script '$source_path' not found. Please ensure all original script files are present in the cloned repository where 'install' is run from." >&2
+        exit 1
+    fi
+
+    # If source and target directories are the same, assume file is already there
+    if [[ "$SCRIPTS_SOURCE_DIR" -ef "$SCRIPTS_TARGET_DIR" ]]; then
+        echo "  - '$script_name': Already in target directory (source == target). Ensuring executable."
+    else
+        # Try to copy the file
+        echo "  - '$script_name': Copying from '$source_path' to '$target_path'..."
+        cp "$source_path" "$target_path" || { echo "Error copying '$script_name' from '$source_path' to '$target_path'. Check permissions or disk space." >&2; exit 1; }
+    fi
+
+    # Make the script executable
+    chmod +x "$target_path" || { echo "Error setting executable permissions for '$target_path'. Check permissions." >&2; exit 1; }
+done
 
 # Create and populate the shell_config.sh file
-echo "Creating and populating $SHELL_CONFIG_FILE..."
-cat <<EOF > "$SHELL_CONFIG_FILE"
+echo "Creating and populating '$SHELL_CONFIG_FILE'..."
+cat <<'EOF' > "$SHELL_CONFIG_FILE" || { echo "Error: Could not create or write to '$SHELL_CONFIG_FILE'. Check permissions or disk space." >&2; exit 1; }
 # --- Custom Shell Functions and Aliases managed by install script ---
 
 # AI Helper Alias
@@ -88,45 +153,49 @@ fix() {
 
     # Get the last command from history
     if [ -n "$ZSH_VERSION" ]; then
-        last_command=\$(print -r -- "\${history[\$((\$HISTCMD-1))]}")
-    elif [ -n "\$BASH_VERSION" ]; then
-        last_command=\$(history -p '!!' 2>/dev/null)
+        last_command=$(print -r -- "${history[$(($HISTCMD-1))]}")
+    elif [ -n "$BASH_VERSION" ]; then
+        last_command=$(history -p '!!' 2>/dev/null)
     else
         echo "Error: Unsupported shell. Cannot determine last command for 'fix' function." >&2
         return 1
     fi
 
     # Basic check to prevent fixing 'fix' itself, or empty commands
-    if [[ -z "\$last_command" || "\$last_command" == "fix" ]]; then
+    if [[ -z "$last_command" || "$last_command" == "fix" ]]; then
         echo "No meaningful previous command to fix." >&2
         return 1
     fi
 
-    echo "Attempting to re-run: \$last_command"
-    local tmp_output=\$(mktemp)
-    if eval "\$last_command" >"\$tmp_output" 2>&1; then
+    echo "Attempting to re-run: $last_command"
+    local tmp_output=$(mktemp)
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to create temporary file for command output. Check permissions or disk space." >&2
+        return 1
+    fi
+    if eval "$last_command" >"$tmp_output" 2>&1; then
         exit_status=0
     else
-        exit_status=\$?
+        exit_status=$?
     fi
-    command_output=\$(cat "\$tmp_output")
-    rm "\$tmp_output"
+    command_output=$(cat "$tmp_output")
+    rm -f "$tmp_output" # Use -f to suppress errors if file doesn't exist
 
-    if [ \$exit_status -eq 0 ]; then
+    if [ $exit_status -eq 0 ]; then
         echo "The previous command completed successfully (exit code 0). No AI fix needed."
     else
-        echo "The previous command failed (exit code \$exit_status)."
+        echo "The previous command failed (exit code $exit_status)."
         echo "Sending details to AI for a suggested fix..."
         local suggested_command
 
-        suggested_command=\$(python3 "\$scripts_dir/gemini_try_helper.py" "\$last_command" "\$command_output")
+        suggested_command=$(python3 "$scripts_dir/gemini_try_helper.py" "$last_command" "$command_output")
 
-        if [ -n "\$suggested_command" ]; then
-            echo -e "\nAI suggests:\n\$suggested_command"
+        if [ -n "$suggested_command" ]; then
+            echo -e "\nAI suggests:\n$suggested_command"
             read -p "Execute suggested command? (y/N): " -n 1 -r
             echo
-            if [[ \$REPLY =~ ^[Yy]\$ ]]; then
-                eval "\$suggested_command"
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                eval "$suggested_command"
             else
                 echo "AI suggestion not executed."
             fi
@@ -134,15 +203,16 @@ fix() {
             echo "AI did not provide a suggestion or an error occurred with the AI helper."
         fi
     fi
-    return \$exit_status
+    return $exit_status
 }
 
 # --- End Custom Shell Functions and Aliases ---
 EOF
+echo "Shell configuration file '$SHELL_CONFIG_FILE' created."
 
-# Make scripts executable (including the new shell_config.sh)
-echo "Making scripts executable..."
-chmod +x "$SCRIPTS_TARGET_DIR"/gemini_ai_helper.py "$SCRIPTS_TARGET_DIR"/gemini_try_helper.py "$SCRIPTS_TARGET_DIR"/blocker "$SHELL_CONFIG_FILE" || { echo "Error setting executable permissions." >&2; exit 1; }
+# Make the shell_config.sh executable
+chmod +x "$SHELL_CONFIG_FILE" || { echo "Error setting executable permissions for '$SHELL_CONFIG_FILE'. Check permissions." >&2; exit 1; }
+echo "All required scripts are in '$SCRIPTS_TARGET_DIR' and are executable."
 
 # 3. Ask for Gemini API Key
 read -p "Please enter your Google Gemini API Key: " gemini_api_key
