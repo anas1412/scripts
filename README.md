@@ -1,4 +1,4 @@
-# Mari's CLI Toolkit: Smart Helpers for Your Linux Workflow
+# Anas's CLI Toolkit: Smart Helpers for Your Linux Workflow
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/anas1412/scripts?style=flat-square)
 ![GitHub top language](https://img.shields.io/github/languages/top/anas1412/scripts?style=flat-square)
