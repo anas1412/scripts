@@ -38,9 +38,9 @@ This repository contains a collection of command-line interface (CLI) scripts de
 *   **Usage:**
     ```bash
     # Example of a failed command
-    ls --nonexistent-option 2>&1 | try "ls --nonexistent-option" "$(cat -)"
+    ls --nonexistent-option 2>&1 | try
     ```
-    (Note: The `2>&1 | gemini_helper.py "..." "$(cat -)"` part is a common pattern to pass the failed command and its error output to the helper.)
+    (Note: The `try` alias automatically passes the failed command and its error output to `gemini_helper.py`.)
 
 ### `blocker`
 
@@ -48,18 +48,18 @@ This repository contains a collection of command-line interface (CLI) scripts de
 *   **Usage:**
     ```bash
     # Add one or more domains to block
-    sudo blocker add example.com another.org
+    blocker add example.com another.org
 
     # Remove one or more domains from blocking
-    sudo blocker remove example.com
+    blocker remove example.com
 
     # Edit an existing blocked domain (replaces old_domain with new_domain)
-    sudo blocker edit old-domain.com new-domain.net
+    blocker edit old-domain.com new-domain.net
 
     # List all currently blocked domains managed by this script
     blocker list
     ```
-    **Note:** This script requires `sudo` privileges for `add`, `remove`, and `edit` operations as it modifies `/etc/hosts`.
+    **Note:** The `blocker` alias automatically handles `sudo` for `add`, `remove`, and `edit` operations as it modifies `/etc/hosts`.
 
 ## Contributing
 
