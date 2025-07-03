@@ -38,7 +38,7 @@ This repository contains a collection of command-line interface (CLI) scripts de
 *   **Usage:**
     ```bash
     # Example of a failed command
-    ls --nonexistent-option 2>&1 | gemini_helper.py "ls --nonexistent-option" "$(cat -)"
+    ls --nonexistent-option 2>&1 | try "ls --nonexistent-option" "$(cat -)"
     ```
     (Note: The `2>&1 | gemini_helper.py "..." "$(cat -)"` part is a common pattern to pass the failed command and its error output to the helper.)
 

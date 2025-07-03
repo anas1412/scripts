@@ -49,8 +49,8 @@ add_or_update_line "$HOME/.zshrc" "export PATH=\"$PATH:$SCRIPTS_DIR\"" "# --scri
 add_or_update_line "$HOME/.bashrc" "alias gemini_ai_helper='python3 $SCRIPTS_DIR/gemini_ai_helper.py'" "# --gemini-alias-managed--"
 add_or_update_line "$HOME/.zshrc" "alias gemini_ai_helper='python3 $SCRIPTS_DIR/gemini_ai_helper.py'" "# --gemini-alias-managed--"
 
-add_or_update_line "$HOME/.bashrc" "alias gemini_helper='python3 $SCRIPTS_DIR/gemini_helper.py'" "# --gemini-alias-managed--"
-add_or_update_line "$HOME/.zshrc" "alias gemini_helper='python3 $SCRIPTS_DIR/gemini_helper.py'" "# --gemini-alias-managed--"
+add_or_update_line "$HOME/.bashrc" "alias try='python3 $SCRIPTS_DIR/gemini_helper.py'" "# --gemini-alias-managed--"
+add_or_update_line "$HOME/.zshrc" "alias try='python3 $SCRIPTS_DIR/gemini_helper.py'" "# --gemini-alias-managed--"
 
 # 4. Make scripts executable
 echo "Making scripts executable..."
