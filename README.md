@@ -1,42 +1,21 @@
-# CLI AI Helper Scripts
+# Scripts
 
 This repository contains a collection of command-line interface (CLI) scripts designed to enhance your productivity on Linux by leveraging the Gemini AI model.
 
-## Installation
+## Installation (For Bash and Zsh Users)
 
 1.  **Clone the repository:**
     ```bash
     git clone https://github.com/anas1412/scripts.git
-    cd your-repo-name
-    ```
-    (Replace `https://github.com/your-username/your-repo-name.git` with the actual URL if this is a public repository, or instruct the user to copy the files if it's not.)
-
-2.  **Install dependencies:**
-    These scripts require the `google-generativeai` Python library.
-    ```bash
-    pip install google-generativeai
+    cd scripts
     ```
 
-3.  **Set up API Key:**
-    You need a Google Gemini API key. Obtain one from [Google AI Studio](https://aistudio.google.com/app/apikey).
-    Set it as an environment variable:
+2.  **Run the install script:**
     ```bash
-    export GOOGLE_API_KEY="YOUR_API_KEY"
+    ./install
     ```
-    For persistence, add this line to your `~/.bashrc` or `~/.zshrc` file.
+    This script will guide you through setting up your Gemini API key, installing dependencies, making scripts executable, and adding necessary aliases and paths to your `~/.bashrc` and `~/.zshrc` files.
 
-4.  **Make scripts executable:**
-    ```bash
-    chmod +x gemini_ai_helper.py gemini_helper.py blocker
-    ```
-
-5.  **Add to PATH (Optional but Recommended):**
-    To run the scripts from any directory, add the scripts directory to your system's PATH.
-    ```bash
-    echo 'export PATH="$PATH:/home/nas/scripts"' >> ~/.bashrc
-    source ~/.bashrc
-    ```
-    (Replace `/home/nas/scripts` with the actual path where you cloned the repository.)
 
 ## Scripts Overview
 
@@ -55,7 +34,7 @@ This repository contains a collection of command-line interface (CLI) scripts de
 
 ### `gemini_helper.py`
 
-*   **Purpose:** This script is a silent command-line fixer. If a command fails, you can pipe its output to this script, and it will provide a raw, corrected shell command based on the error. It provides no explanation, only the fix.
+*   **Purpose:** This script is a silent command-line fixer. If a command fails, you can pipe its output to this script, and it will provide a raw, corrected shell command based on the error.
 *   **Usage:**
     ```bash
     # Example of a failed command

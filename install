@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# Function to add or update a line in a shell configuration file
+add_or_update_line() {
+    local file="$1"
+    local line_to_add="$2"
+    local comment_marker="$3" # A unique comment to identify lines managed by this script
+
+    if [ -f "$file" ]; then
+        if grep -qF "$comment_marker" "$file"; then
+            # Line exists, update it
+            sed -i "/$comment_marker/c\$line_to_add $comment_marker" "$file"
+            echo "Updated line in $file"
+        else
+            # Line does not exist, add it
+            echo "$line_to_add $comment_marker" >> "$file"
+            echo "Added line to $file"
+        fi
+    else
+        echo "Warning: $file not found. Skipping updates for this file."
+    fi
+}
+
+echo "Welcome to the Scripts installation!"
+echo "This script will help you set up your Gemini API key, install dependencies, and configure aliases."
+
+# 1. Ask for Gemini API Key
+read -p "Please enter your Google Gemini API Key: " gemini_api_key
+
+# 2. Install dependencies
+echo "Installing Python dependencies..."
+pip install google-generativeai
+
+# 3. Set up API Key and aliases in .bashrc and .zshrc
+echo "Configuring .bashrc and .zshrc..."
+
+# Get the absolute path of the scripts directory
+SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Export API Key
+add_or_update_line "$HOME/.bashrc" "export GOOGLE_API_KEY=\"$gemini_api_key\"" "# --gemini-api-key-managed--"
+add_or_update_line "$HOME/.zshrc" "export GOOGLE_API_KEY=\"$gemini_api_key\"" "# --gemini-api-key-managed--"
+
+# Add scripts to PATH
+add_or_update_line "$HOME/.bashrc" "export PATH=\"$PATH:$SCRIPTS_DIR\"" "# --scripts-path-managed--"
+add_or_update_line "$HOME/.zshrc" "export PATH=\"$PATH:$SCRIPTS_DIR\"" "# --scripts-path-managed--"
+
+# Add aliases
+add_or_update_line "$HOME/.bashrc" "alias gemini_ai_helper='python3 $SCRIPTS_DIR/gemini_ai_helper.py'" "# --gemini-alias-managed--"
+add_or_update_line "$HOME/.zshrc" "alias gemini_ai_helper='python3 $SCRIPTS_DIR/gemini_ai_helper.py'" "# --gemini-alias-managed--"
+
+add_or_update_line "$HOME/.bashrc" "alias gemini_helper='python3 $SCRIPTS_DIR/gemini_helper.py'" "# --gemini-alias-managed--"
+add_or_update_line "$HOME/.zshrc" "alias gemini_helper='python3 $SCRIPTS_DIR/gemini_helper.py'" "# --gemini-alias-managed--"
+
+# 4. Make scripts executable
+echo "Making scripts executable..."
+chmod +x "$SCRIPTS_DIR"/gemini_ai_helper.py "$SCRIPTS_DIR"/gemini_helper.py "$SCRIPTS_DIR"/blocker "$SCRIPTS_DIR"/install
+
+echo "Installation complete!"
+echo "Please restart your terminal or run 'source ~/.bashrc' (or 'source ~/.zshrc') for the changes to take effect."
