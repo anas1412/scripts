@@ -1,0 +1,115 @@
+#!/bin/bash
+
+HOSTS_FILE="/etc/hosts"
+BLOCK_LINE_PREFIX="127.0.0.1"
+MARKER="# --blocker-managed--"
+
+ensure_line_exists() {
+    if ! grep -q "$MARKER" "$HOSTS_FILE"; then
+        echo -e "$BLOCK_LINE_PREFIX\t$MARKER" | sudo tee -a "$HOSTS_FILE" > /dev/null
+    fi
+}
+
+get_domains() {
+    grep "$MARKER" "$HOSTS_FILE" | sed "s/^$BLOCK_LINE_PREFIX\s*//;s/$MARKER//" | xargs
+}
+
+update_line() {
+    local new_domains="$1"
+    sudo sed -i "/$MARKER/c\\$BLOCK_LINE_PREFIX\t$new_domains $MARKER" "$HOSTS_FILE"
+}
+
+add_domain() {
+    ensure_line_exists
+    local input=("$@")
+    local domains=($(get_domains))
+    local changed=0
+
+    for domain in "${input[@]}"; do
+        if [[ " ${domains[*]} " == *" $domain "* ]] || [[ " ${domains[*]} " == *" www.$domain "* ]]; then
+            echo "$domain already exists, skipping."
+        else
+            domains+=("$domain" "www.$domain")
+            echo "Added $domain and www.$domain"
+            changed=1
+        fi
+    done
+
+    [[ $changed -eq 1 ]] && update_line "${domains[*]}"
+}
+
+remove_domain() {
+    ensure_line_exists
+    local input=("$@")
+    local domains=($(get_domains))
+    local changed=0
+
+    for domain in "${input[@]}"; do
+        if [[ ! " ${domains[*]} " == *" $domain "* ]] && [[ ! " ${domains[*]} " == *" www.$domain "* ]]; then
+            echo "$domain does not exist, skipping."
+        else
+            local new_domains=()
+            for d in "${domains[@]}"; do
+                [[ "$d" != "$domain" && "$d" != "www.$domain" ]] && new_domains+=("$d")
+            done
+            domains=("${new_domains[@]}")
+            echo "Removed $domain and www.$domain"
+            changed=1
+        fi
+    done
+
+    [[ $changed -eq 1 ]] && update_line "${domains[*]}"
+}
+
+edit_domain() {
+    ensure_line_exists
+    local old="$1"
+    local new="$2"
+    local domains=($(get_domains))
+    local found_old=0
+
+    local new_domains=()
+    for d in "${domains[@]}"; do
+        if [[ "$d" == "$old" ]]; then
+            new_domains+=("$new")
+            found_old=1
+        elif [[ "$d" == "www.$old" ]]; then
+            new_domains+=("www.$new")
+            found_old=1
+        else
+            new_domains+=("$d")
+        fi
+    done
+
+    if [[ $found_old -eq 0 ]]; then
+        echo "Domain $old not found, cannot edit."
+        return 1
+    fi
+
+    update_line "${new_domains[*]}"
+    echo "Replaced $old → $new (and www version)"
+}
+
+list_domains() {
+    ensure_line_exists
+    local domains=($(get_domains))
+    for d in "${domains[@]}"; do
+        [[ "$d" != www.* ]] && echo "$d"
+    done
+}
+
+case "$1" in
+    add) shift; add_domain "$@" ;;
+    remove) shift; remove_domain "$@" ;;
+    edit)
+        shift
+        if [[ $# -ne 2 ]]; then
+            echo "Usage: blocker edit <old_domain> <new_domain>"
+            exit 1
+        fi
+        edit_domain "$1" "$2"
+        ;;
+    list) list_domains ;;
+    help|*) echo "Usage: blocker [add|remove|edit|list] <domain(s)> [new_domain]" ;;
+esac
+
